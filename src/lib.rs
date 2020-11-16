@@ -17,6 +17,8 @@
 //! cores. Or if the iterator does blocking IO on multiple files, opening of
 //! later files can be overlapped with processing of earlier files.
 
+#![warn(missing_docs)]
+
 use std::sync::mpsc::{sync_channel, Receiver};
 use std::thread;
 
@@ -40,6 +42,14 @@ where
     /// back to the calling thread.
     ///
     /// `buffer_size` is the maximum number of items that can be buffered.
+    ///
+    /// ```
+    /// use readahead_iterator::Readahead;
+    /// let c = Readahead::new("Hello Ferris".chars(), 10)
+    ///     .filter(|c| c.is_uppercase())
+    ///     .count();
+    /// # assert_eq!(c, 2);
+    /// ```
     pub fn new<I>(inner: I, buffer_size: usize) -> Self
     where
         I: Iterator<Item = T> + Send + 'static,
