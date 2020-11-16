@@ -79,3 +79,39 @@ where
         self.receiver.recv().expect("recv of iterator value failed")
     }
 }
+
+/// Adds a `.readahead(buffer_size)` method to any iterator.
+///
+/// ```
+/// use readahead_iterator::IntoReadahead;
+///
+/// let c = "Some input data".chars()
+///     .readahead(10)
+///     .filter(|c| c.is_alphabetic())
+///     .count();
+/// # assert_eq!(c, 13);
+/// ```
+pub trait IntoReadahead<T>
+where
+    T: Send + 'static,
+{
+    /// Apply a readahead adaptor to an iterator.
+    ///
+    /// `buffer_size` is the maximum number of buffered items.
+    fn readahead(self, buffer_size: usize) -> Readahead<T>
+    where
+        Self: Send + 'static;
+}
+
+impl<I, T> IntoReadahead<T> for I
+where
+    T: Send + 'static,
+    I: Iterator<Item = T>,
+{
+    fn readahead(self, buffer_size: usize) -> Readahead<T>
+    where
+        Self: Send + 'static,
+    {
+        Readahead::new(self, buffer_size)
+    }
+}
