@@ -6,6 +6,8 @@ edition = "2018"
 license = "MIT OR Apache-2.0"
 description = "Readahead from an iterator on a separate thread, returning items in order and synchronously."
 readme = "README.md"
+keywords = ["parallel", "iterator", "concurrency", "thread"]
+repository = "https://github.com/sourcefrog/readahead-iterator"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
