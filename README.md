@@ -20,4 +20,4 @@ adaptor is useful for some simpler and complementary cases:
  * The work is potentially IO-bound, so a separate thread can be dedicated to
    this iterator, rather than using an `NCPUS` thread pool.
 
-[rayon]: https://docs.rs/rayon/1.5.0/rayon/
+[rayon]: https://docs.rs/rayon/
