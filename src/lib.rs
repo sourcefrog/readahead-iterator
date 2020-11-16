@@ -18,6 +18,7 @@
 //! later files can be overlapped with processing of earlier files.
 
 #![warn(missing_docs)]
+#![forbid(unsafe_code)]
 
 use std::sync::mpsc::{sync_channel, Receiver};
 use std::thread;
