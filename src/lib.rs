@@ -13,10 +13,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Readahead adaptor for iterators.
+//!
+//! Items are generated from the iterator in a separate thread, and returned
+//! to the caller as a regular iterator, in the same order.
+//!
+//! This is useful when the wrapped iterator does significant work that
+//! can be parallelized with other work on the calling thread. For example,
+//! if both the iterator and its client are CPU-intensive, they utilize separate
+//! cores. Or if the iterator does blocking IO on multiple files, opening of
+//! later files can be overlapped with processing of earlier files.
+
 use std::sync::mpsc::{sync_channel, Receiver};
 use std::thread;
 
-///
 /// An iterator adaptor that evaluates the iterator on a separate thread,
 /// and transports the items back to be consumed from the original thread.
 ///
