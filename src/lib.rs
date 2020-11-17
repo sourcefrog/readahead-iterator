@@ -29,6 +29,15 @@ use std::thread;
 /// This is useful when the iterator does IO or uses the CPU in a way that
 /// can be parallelized with the main thread, while still letting the
 /// caller consume items in order and synchronously.
+///
+/// The wrapped iterator (and its items) must be `Send` so that they can be
+/// sent between threads.
+///
+/// The iterator must also have `'static` lifetime, so that it lives long
+/// enough for the thread and wrapper. Often this can be accomplished by
+/// making sure the inner iterator is by-value, rather than iterating
+/// references through a collection: construct it with
+/// [`into_iter()`](https://doc.rust-lang.org/std/iter/index.html#the-three-forms-of-iteration).
 pub struct Readahead<T: Send + 'static> {
     receiver: Receiver<Option<T>>,
 }
