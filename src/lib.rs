@@ -16,6 +16,41 @@
 //! if both the iterator and its client are CPU-intensive, they utilize separate
 //! cores. Or if the iterator does blocking IO on multiple files, opening of
 //! later files can be overlapped with processing of earlier files.
+//!
+//! The wrapped iterator (and its items) must be `Send` so that they can be
+//! sent between threads.
+//!
+//! The iterator must also have `'static` lifetime, so that it lives long
+//! enough for the thread and wrapper. Often this can be accomplished by
+//! making sure the inner iterator is by-value, rather than iterating
+//! references through a collection: construct it with
+//! [`into_iter()`](https://doc.rust-lang.org/std/iter/index.html#the-three-forms-of-iteration).
+//!
+//! For example, to overlap opening files with reading from them:
+//!
+//! ```
+//! use std::fs::File;
+//! use std::io::{BufRead, BufReader};
+//! use readahead_iterator::IntoReadahead;
+//!
+//! let filenames = vec!["src/lib.rs", "examples/linecount.rs", "Cargo.toml"];
+//! let total_lines: usize = filenames
+//!     .into_iter()
+//!     .filter_map(|filename| {
+//!         File::open(filename.clone())
+//!             .map_err(|err| eprintln!("failed to open {}: {:?}", filename, err))
+//!             .map(|file| (filename, file))
+//!             .ok()
+//!     })
+//!     .readahead(5)
+//!     .map(|(filename, file)| {
+//!         let line_count = BufReader::new(file).lines().count();
+//!         println!("{:>8} {}", line_count, filename);
+//!         line_count
+//!     })
+//!     .sum();
+//! println!("{:>8} TOTAL", total_lines);
+//! ```
 
 #![warn(missing_docs)]
 #![forbid(unsafe_code)]
@@ -25,19 +60,6 @@ use std::thread;
 
 /// An iterator adaptor that evaluates the iterator on a separate thread,
 /// and transports the items back to be consumed from the original thread.
-///
-/// This is useful when the iterator does IO or uses the CPU in a way that
-/// can be parallelized with the main thread, while still letting the
-/// caller consume items in order and synchronously.
-///
-/// The wrapped iterator (and its items) must be `Send` so that they can be
-/// sent between threads.
-///
-/// The iterator must also have `'static` lifetime, so that it lives long
-/// enough for the thread and wrapper. Often this can be accomplished by
-/// making sure the inner iterator is by-value, rather than iterating
-/// references through a collection: construct it with
-/// [`into_iter()`](https://doc.rust-lang.org/std/iter/index.html#the-three-forms-of-iteration).
 pub struct Readahead<T: Send + 'static> {
     receiver: Receiver<Option<T>>,
 }
