@@ -88,14 +88,17 @@ where
     {
         // TODO: What if the iterator is dropped?
         let (sender, receiver) = sync_channel(buffer_size);
-        thread::spawn(move || {
-            for item in inner {
-                sender
-                    .send(Some(item))
-                    .expect("send from inner iterator failed");
-            }
-            sender.send(None).expect("send of final None failed");
-        });
+        thread::Builder::new()
+            .name("readahead_iterator".to_owned())
+            .spawn(move || {
+                for item in inner {
+                    sender
+                        .send(Some(item))
+                        .expect("send from inner iterator failed");
+                }
+                sender.send(None).expect("send of final None failed");
+            })
+            .expect("failed to spawn readahead_iterator thread");
         Readahead { receiver }
     }
 }
