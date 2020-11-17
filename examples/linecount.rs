@@ -37,9 +37,13 @@ pub fn main() {
         })
         .readahead(5)
         .map(|(filename, file)| {
-            let line_count = BufReader::new(file).lines().count();
-            println!("{:>8} {}", line_count, filename);
-            line_count
+            if file.metadata().expect("failed to get metadata").is_file() {
+                let line_count = BufReader::new(file).lines().count();
+                println!("{:>8} {}", line_count, filename);
+                line_count
+            } else {
+                0
+            }
         })
         .sum();
     println!();
