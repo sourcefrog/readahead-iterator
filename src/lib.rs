@@ -55,6 +55,7 @@
 #![warn(missing_docs)]
 #![forbid(unsafe_code)]
 
+use std::fmt::Debug;
 use std::sync::mpsc::{sync_channel, Receiver};
 use std::thread;
 
@@ -84,18 +85,23 @@ where
     /// ```
     pub fn new<I>(inner: I, buffer_size: usize) -> Self
     where
-        I: Iterator<Item = T> + Send + 'static,
+        I: Iterator<Item = T> + Send + Debug + 'static,
     {
         // TODO: What if the iterator is dropped?
         let (sender, receiver) = sync_channel(buffer_size);
-        thread::spawn(move || {
-            for item in inner {
-                sender
-                    .send(Some(item))
-                    .expect("send from inner iterator failed");
-            }
-            sender.send(None).expect("send of final None failed");
-        });
+        let name = format!("Readahead({:?})", inner);
+        dbg!(&name);
+        thread::Builder::new()
+            .name(name)
+            .spawn(move || {
+                for item in inner {
+                    sender
+                        .send(Some(item))
+                        .expect("send from inner iterator failed");
+                }
+                sender.send(None).expect("send of final None failed");
+            })
+            .expect("failed to create readahead thread");
         Readahead { receiver }
     }
 }
@@ -137,7 +143,7 @@ where
 impl<I, T> IntoReadahead<T> for I
 where
     T: Send + 'static,
-    I: Iterator<Item = T>,
+    I: Iterator<Item = T> + Debug,
 {
     fn readahead(self, buffer_size: usize) -> Readahead<T>
     where
