@@ -10,6 +10,11 @@
 //!
 //! Opening files can take time on slow filesystems: open the
 //! next few files in parallel with reading their lines.
+//!
+//! This is in some ways a bad example though: there's really no need
+//! to open files one at a time, or to read them just one at a time,
+//! so a more aggressive multithreading approach would also work
+//! fine here. But it's just an example.
 
 use std::fs::File;
 use std::io::{BufRead, BufReader};
