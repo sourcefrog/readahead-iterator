@@ -1,6 +1,6 @@
 # Readahead adaptor for iterators
 
-API Docs: https://docs.rs/readahead-iterator/0.1.1/readahead_iterator/
+API Docs: https://docs.rs/readahead-iterator/
 
 Examples: https://github.com/sourcefrog/readahead-iterator/tree/main/examples
 
