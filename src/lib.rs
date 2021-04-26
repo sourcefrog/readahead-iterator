@@ -1,4 +1,4 @@
-// Copyright 2020 Martin Pool
+// Copyright 2020, 2021 Martin Pool
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
@@ -61,7 +61,7 @@ use std::thread;
 /// An iterator adaptor that evaluates the iterator on a separate thread,
 /// and transports the items back to be consumed from the original thread.
 pub struct Readahead<T: Send + 'static> {
-    receiver: Receiver<Option<T>>,
+    receiver: Option<Receiver<Option<T>>>,
 }
 
 impl<T> Readahead<T>
@@ -99,7 +99,9 @@ where
                 sender.send(None).expect("send of final None failed");
             })
             .expect("failed to spawn readahead_iterator thread");
-        Readahead { receiver }
+        Readahead {
+            receiver: Some(receiver),
+        }
     }
 }
 
@@ -110,7 +112,14 @@ where
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        self.receiver.recv().expect("recv of iterator value failed")
+        let r = self
+            .receiver
+            .as_ref()
+            .and_then(|r| r.recv().expect("recv of iterator value failed"));
+        if r.is_none() {
+            self.receiver = None
+        }
+        r
     }
 }
 
