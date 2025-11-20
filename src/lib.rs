@@ -86,7 +86,6 @@ where
     where
         I: Iterator<Item = T> + Send + 'static,
     {
-        // TODO: What if the iterator is dropped?
         let (sender, receiver) = sync_channel(buffer_size);
         thread::Builder::new()
             .name("readahead_iterator".to_owned())
