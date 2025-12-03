@@ -1,4 +1,4 @@
-// Copyright 2020, 2021 Martin Pool
+// Copyright 2020, 2021, 2025 Martin Pool
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
@@ -127,10 +127,15 @@ where
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
+        // Iterator returns None when:
+        // 1. receiver is already None, i.e. we already ended.
+        // 2. sender sent an explicit None indicating the end, i.e. normal termination
+        // 3. the sender hung up: this shouldn't normally happen but let's not panic.
         let r = self
             .receiver
             .as_ref()
-            .and_then(|r| r.recv().expect("recv of iterator value failed")); // TODO: Don't panic?
+            .and_then(|r| r.recv().ok())
+            .unwrap_or_default();
         if r.is_none() {
             self.receiver = None
         }
@@ -171,5 +176,30 @@ where
         Self: Send + 'static,
     {
         Readahead::new(self, buffer_size)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    /// Test that we don't panic if the receiver thread quits unexpectedly.
+    ///
+    /// This might not be possible to construct through the public interface
+    /// but it's still good to avoid a potential panic.
+    #[test]
+    fn sender_exits_unexpectedly() {
+        let (sender, receiver) = sync_channel(4);
+        thread::Builder::new()
+            .spawn(move || {
+                sender.send(Some(1)).expect("send failed");
+            })
+            .expect("failed to spawn readahead_iterator thread"); // TODO: Optionally return an error instead.
+        let mut r = Readahead {
+            receiver: Some(receiver),
+        };
+        assert_eq!(r.next(), Some(1));
+        // the sender quit without returning None but we shouldn't panic: just see that as the end
+        assert_eq!(r.next(), None);
     }
 }
