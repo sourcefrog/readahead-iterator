@@ -12,10 +12,15 @@
 //! to the caller as a regular iterator, in the same order.
 //!
 //! This is useful when the wrapped iterator does significant work that
-//! can be parallelized with other work on the calling thread. For example,
-//! if both the iterator and its client are CPU-intensive, they utilize separate
-//! cores. Or if the iterator does blocking IO on multiple files, opening of
-//! later files can be overlapped with processing of earlier files.
+//! can be parallelized with other work on the calling thread.
+//!
+//! For example:
+//!
+//! 1. Both the iterator and its client are CPU-intensive: allowing the iterator to
+//!    run ahead will let it do some work in parallel on a separate core.
+//! 2. The iterator generating work does blocking or lengthy IO such as opening
+//!    and reading many files: opening the files can proceed in parallel with
+//!    processing already-open files.
 //!
 //! The wrapped iterator (and its items) must be `Send` so that they can be
 //! sent between threads.
@@ -51,6 +56,11 @@
 //!     .sum();
 //! println!("{:>8} TOTAL", total_lines);
 //! ```
+//!
+//! # Potential future features:
+//!
+//! 1. A threaded `map` across a bounded readahead from the iterator, processing them
+//!    out of order within a sliding window.
 
 #![warn(missing_docs)]
 #![forbid(unsafe_code)]
