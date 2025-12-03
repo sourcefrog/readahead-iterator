@@ -1,4 +1,4 @@
-// Copyright 2020, 2021 Martin Pool
+// Copyright 2020, 2021, 2025 Martin Pool
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
@@ -9,7 +9,7 @@
 use std::thread::sleep;
 use std::time::Duration;
 
-use readahead_iterator::Readahead;
+use readahead_iterator::{IntoReadahead, Readahead};
 
 /// A lot like examples/sleepy, but with minimal sleeps.
 #[test]
@@ -69,4 +69,13 @@ fn take_more_items() {
         .take(10)
         .collect();
     assert_eq!(values, vec![0, 1, 2, 3, 4]);
+}
+
+#[test]
+fn unbounded_input() {
+    (0..)
+        .into_iter()
+        .readahead(3)
+        .take(100)
+        .for_each(|x| println!("{}", x));
 }
