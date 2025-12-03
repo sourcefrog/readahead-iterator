@@ -82,6 +82,10 @@ where
     ///     .count();
     /// # assert_eq!(c, 2);
     /// ```
+    ///
+    /// # Panics
+    ///
+    /// On failing to spawn a new thread.
     pub fn new<I>(inner: I, buffer_size: usize) -> Self
     where
         I: Iterator<Item = T> + Send + 'static,
@@ -99,7 +103,7 @@ where
                 // Receiver has been dropped, no need to send final None
                 let _ = sender.send(None);
             })
-            .expect("failed to spawn readahead_iterator thread");
+            .expect("failed to spawn readahead_iterator thread"); // TODO: Optionally return an error instead.
         Readahead {
             receiver: Some(receiver),
         }
@@ -116,7 +120,7 @@ where
         let r = self
             .receiver
             .as_ref()
-            .and_then(|r| r.recv().expect("recv of iterator value failed"));
+            .and_then(|r| r.recv().expect("recv of iterator value failed")); // TODO: Don't panic?
         if r.is_none() {
             self.receiver = None
         }
