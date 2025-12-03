@@ -65,6 +65,9 @@
 #![warn(missing_docs)]
 #![forbid(unsafe_code)]
 
+#[doc = include_str!("../NEWS.md")]
+pub mod _changelog {}
+
 use std::sync::mpsc::{sync_channel, Receiver};
 use std::thread;
 
@@ -137,7 +140,7 @@ where
             .and_then(|r| r.recv().ok())
             .unwrap_or_default();
         if r.is_none() {
-            self.receiver = None
+            self.receiver = None;
         }
         r
     }
@@ -181,8 +184,6 @@ where
 
 #[cfg(test)]
 mod test {
-    use std::iter::once;
-
     use super::*;
 
     /// Test that we don't panic if the receiver thread quits unexpectedly.
