@@ -181,6 +181,8 @@ where
 
 #[cfg(test)]
 mod test {
+    use std::iter::once;
+
     use super::*;
 
     /// Test that we don't panic if the receiver thread quits unexpectedly.
@@ -200,6 +202,21 @@ mod test {
         };
         assert_eq!(r.next(), Some(1));
         // the sender quit without returning None but we shouldn't panic: just see that as the end
+        assert_eq!(r.next(), None);
+        assert_eq!(r.next(), None);
+    }
+
+    #[test]
+    fn receiver_doesnt_panic_if_sender_panics() {
+        // TODO: Possibly some callers might want to propagate panics??
+        //
+        // Note: this will display a panic warning on the test's stderr, but the
+        // calling thread continues on and succeeds.
+        let vals = vec![false, true];
+        let iter = vals.into_iter().map(|v| if v { panic!() } else { 2 });
+        let mut r = iter.readahead(1);
+        assert_eq!(r.next(), Some(2));
+        assert_eq!(r.next(), None);
         assert_eq!(r.next(), None);
     }
 }
