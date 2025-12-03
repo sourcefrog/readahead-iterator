@@ -1,5 +1,9 @@
 # `readahead-iterator` Release History
 
+## v0.1.3 2025-12-03
+
+- Improved docs, no code changes.
+
 ## v0.1.2 2025-12-03
 
 - Bug fix: Thread no longer panics when the receiver is dropped early,
